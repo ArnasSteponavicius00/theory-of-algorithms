@@ -31,10 +31,10 @@ int main(int argc, char *argv[]) {
     printf("Value, displayed using %%d: %d\n", i);
     printf("Value, displayed using %%u: %u\n", i);
 
-    printf("Original:  ");
+    printf("\nBin\t: ");
     // Print i in binary
     bin_print(i);
-    printf("Hex: \t%x\tDec:  %u\n\n", i, i);
+    printf("\nHex\t: %x\tDec:  %u\n\n", i, i);
 
     // 32
     int j = sizeof(unsigned int) * 8;
@@ -48,7 +48,13 @@ int main(int argc, char *argv[]) {
         printf("-------------------------------- &\n");
 
         // (1 shifted left j times) bitwise logical and i
-        bin_print(((1 << j) & i)); printf("\n");
+        bin_print(((1 << j) & i));
+
+        if (((1 << j) & i) == 0)
+        {
+            printf(" - BITMASK\n");
+        }
+        
 
         printf("\n");
     }
