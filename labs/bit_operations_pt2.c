@@ -12,6 +12,7 @@ void bin_print(unsigned int i) {
     {
         // ternary operator, if the condition is true, return 1,
         // otherwise return 0.
+        // Pick out the j^th bit of i
         k = ((1 << j) & i) ? 1 : 0;
         printf("%d", k);
     }
@@ -21,7 +22,7 @@ void bin_print(unsigned int i) {
 // main
 int main(int argc, char *argv[]) {
 
-    unsigned int i = 0xffffffff; // 2^32-1 or 4294967295, max value an int can hold
+    unsigned int i = 0x0f0f0f0f; // 2^32-1 or 4294967295, max value an int can hold
 
     // Number of bytes the compiler uses to store the value
     printf("Byte size of int: %lu\n", sizeof(i));
@@ -35,17 +36,19 @@ int main(int argc, char *argv[]) {
     bin_print(i);
     printf("Hex: \t%x\tDec:  %u\n\n", i, i);
 
+    // 32
+    int j = sizeof(unsigned int) * 8;
 
-    for (int j; j < 40; j++)
+    for (j--; j >= 0; j--)
     {
-        // Prints the operation
-        // i.e the value (i) shifted j positionss
-        printf("%3u << %2d: ", i, j);
-    
-        // bits get shifted to the left, then destroyed going towards the left
-        bin_print(1 << j);
-        // print the decimal equivalent of the binary as the bits are being shifted.
-        printf("\t Decimal Val: %-3d", (int)(1 << j));
+        // 1 shifted left j times
+        bin_print(1 << j); printf("\n");
+        // i
+        bin_print(i); printf("\n");
+        printf("-------------------------------- &\n");
+
+        // (1 shifted left j times) bitwise logical and i
+        bin_print(((1 << j) & i)); printf("\n");
 
         printf("\n");
     }
