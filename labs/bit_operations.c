@@ -19,33 +19,35 @@ void bin_print(unsigned int i) {
 }
 
 // main
-int main(int argc, char * argv[]) {
+int main(int argc, char *argv[]) {
 
     unsigned int i = 0xffffffff; // 2^32-1 or 4294967295, max value an int can hold
 
     // Number of bytes the compiler uses to store the value
     printf("Byte size of int: %lu\n", sizeof(i));
-    printf("%d\n", i);
+    
+    // Will return -1 because int (4 bytes) is declared as unsigned(5 bytes), change to %u to see value
+    printf("Value, displayed using %%d: %d\n", i);
+    printf("Value, displayed using %%u: %u\n", i);
 
     printf("Original:  ");
-    
     // Print i in binary
     bin_print(i);
     printf("Hex: \t%x\tDec:  %u\n\n", i, i);
 
-    
+
     for (int j; j < 40; j++)
     {
         // Prints the operation
         // i.e the value (i) shifted j positions
-        printf("%3d << %2d: ", i, j);
-
+        printf("%3u << %2d: ", i, j);
+    
         // bits get shifted to the left, then destroyed going towards the left
         bin_print(i << j);
 
         // bits get shifted to the right, then destroyed going towards the right
         bin_print(i >> j);
-        printf(": %3d >> %2d", i, j);
+        printf(": %3u >> %2d", i, j);
         printf("\n");
     }
 
