@@ -1,8 +1,13 @@
 #include <stdio.h>
+#include <stdint.h>
+
+// https://stackoverflow.com/questions/9606455/how-to-specify-64-bit-integers-in-c
+__int64_t rotr_x, rotl_x;
+__int64_t i64 = 0x921FFAB1234C1DFFLL; // random 64 bit int
 
 void bin_print(unsigned int i) {
     // Number of bits in an integer the compiler uses to store value
-    int j = sizeof(unsigned int) * 8;
+    int j = sizeof(unsigned int) * 16;
 
     // temp var
     int k;
@@ -19,10 +24,56 @@ void bin_print(unsigned int i) {
     printf(" ");
 }
 
+// Referenced and adapted from: https://www.geeksforgeeks.org/rotate-bits-of-an-integer/
+// n is the number of rotations
+// d is the value passed
+// w is the number of bits in d
+void rotateRight(int n, __int64_t d) {
+    unsigned int w = sizeof(d) * 8;
+
+    // loops around n times
+    for (int i = 0; i < n; i++)
+    {
+        // formula from NIST paper on Secure Hash Algorithms
+        // when rotating bits to the right, we shift d by i (n times)
+        // and use the bitwise OR on (i << (w - n)) to bring the bits to the back
+        rotr_x = (d >> i) | (i << (w - n));
+        // print the binary
+        bin_print(rotr_x);
+        printf("\n");
+    }
+}
+
+// Referenced and adapted from: https://www.geeksforgeeks.org/rotate-bits-of-an-integer/
+// n is the number of rotations
+// d is the value passed
+// w is the number of bits in d
+void rotateLeft(int n, __int64_t d) {
+
+    unsigned int w = sizeof(d) * 8;
+
+    // loops around n times
+    for (int i = 0; i < n; i++)
+    {
+        // formula from NIST paper on Secure Hash Algorithms
+        // when rotating bits to the left, we shift d by i (n times)
+        // and use the bitwise OR on (i >> (w - n)) to bring the bits
+        // to the front
+        rotl_x = (d << i) | (i >> (w - n));
+        // print the binary
+        bin_print(rotl_x);
+        printf("\n");
+    }
+}
+
+
 // main
 int main(int argc, char *argv[]) {
 
-    unsigned int i = 0x0f0f0f0f; // 2^32-1 or 4294967295, max value an int can hold
+    unsigned int i = 0x0f0f0f0f;
+
+    int rotationOf = 10;
+    int rotateBy = 10;
 
     // Number of bytes the compiler uses to store the value
     printf("Byte size of int: %lu\n", sizeof(i));
@@ -54,10 +105,16 @@ int main(int argc, char *argv[]) {
         {
             printf(" - BITMASK\n");
         }
-        
-
-        printf("\n");
+        printf("\n\n");
     }
+
+    rotationOf = i64;
+
+    printf("Right rotation of %d by %d: \n", rotationOf, rotateBy);
+    rotateRight(rotateBy, rotationOf);
+
+    printf("Left rotation of %d by %d: \n", rotationOf, rotateBy);
+    rotateLeft(rotateBy, rotationOf);
 
     return 0;
 }

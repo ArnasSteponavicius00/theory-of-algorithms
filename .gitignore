@@ -1,3 +1,7 @@
+# Compiled C files
+bit_operations
+bit_operations_pt2
+
 # Prerequisites
 *.d
 
