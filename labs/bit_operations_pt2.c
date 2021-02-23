@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 // https://stackoverflow.com/questions/9606455/how-to-specify-64-bit-integers-in-c
 __int64_t rotr_x, rotl_x;
@@ -7,7 +8,7 @@ __int64_t i64 = 0x921FFAB1234C1DFFLL; // random 64 bit int
 
 void bin_print(unsigned int i) {
     // Number of bits in an integer the compiler uses to store value
-    int j = sizeof(unsigned int) * 16;
+    int j = sizeof(__int64_t) * 8;
 
     // temp var
     int k;
@@ -87,7 +88,7 @@ int main(int argc, char *argv[]) {
     bin_print(i);
     printf("\nHex\t: %x\tDec:  %u\n\n", i, i);
 
-    // 32
+    // 32 bits
     int j = sizeof(unsigned int) * 8;
 
     for (j--; j >= 0; j--)
@@ -110,9 +111,11 @@ int main(int argc, char *argv[]) {
 
     rotationOf = i64;
 
+    // Display the rotated bits
     printf("Right rotation of %d by %d: \n", rotationOf, rotateBy);
     rotateRight(rotateBy, rotationOf);
 
+    //Displa the rotated bits
     printf("Left rotation of %d by %d: \n", rotationOf, rotateBy);
     rotateLeft(rotateBy, rotationOf);
 
