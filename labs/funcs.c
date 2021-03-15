@@ -9,11 +9,15 @@
 // Page 5 of Secure Hash Standard
 #define ROTL(x, n) (x << n) | (x >> (W - n))
 #define ROTR(x, n) (x >> n) | (x << (W - n))
+#define SHR(x, n) x>>n
 
 // Page 10 of Secure Hash Standard
 #define Ch(x, y, z) ((x & y) ^ (~x & z))
 #define Maj(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
 #define SIG0(x) ROTR(x, 28) ^ ROTR(x, 34) ^ ROTR(x, 39)
+#define SIG1(x) ROTR(x, 14) ^ ROTR(x, 18) ^ ROTR(x, 41)
+#define Sig0(x) ROTR(x, 1) ^ ROTR(x, 8) ^ SHR(x, 7)
+#define Sig1(x) ROTR(x, 19) ^ ROTR(x, 61) ^ SHR(x, 6)
 
 //Original code before making the functions into pre-processors
 /* (x & y) = chooses where the bits are set to 1 in x, the corresponding y WORDue will be picked
@@ -53,7 +57,10 @@ int main(int argc, char *argv[]) {
     printf("Hex - ROTR(%" PFHEX " -> %" PFHEX "\n", x, ROTR(x, 4));
     printf("Dec - ROTR(%" PFDEC " -> %" PFDEC "\n\n", x, ROTR(x, 4));
 
-    printf("Hex - SIG0(%" PFDEC " -> %" PFDEC "\n\n", x, SIG0(x));
+    printf("Hex - SIG0(%" PFDEC " -> %" PFDEC "\n", x, SIG0(x));
+    printf("Hex - SIG1(%" PFDEC " -> %" PFDEC "\n", x, SIG1(x));
+    printf("Hex - Sig0(%" PFDEC " -> %" PFDEC "\n", x, Sig0(x));
+    printf("Hex - Sig1(%" PFDEC " -> %" PFDEC "\n", x, Sig1(x));
 
 
 
