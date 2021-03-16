@@ -1,6 +1,9 @@
 # Compiled C files
 bit_operations
 bit_operations_pt2
+funcs
+preproc
+emptyexec
 
 # Prerequisites
 *.d
