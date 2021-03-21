@@ -1,45 +1,65 @@
 #include <stdio.h>
 #include <inttypes.h>
 
+#define W 64
+#define WORD uint64_t
+#define PFDEC PRIu64
+#define PFHEX PRIX64
 #define BYTE uint8_t
 
-void bin_print(BYTE i) {
-    // Number of bits in an integer the compiler uses to store value
-    int j = sizeof(BYTE) * 8;
+union Block {
+    BYTE bytes[64];
+    WORD words[16];
+};
 
-    // temp var
-    int k;
-
-    // Loop over the amount of bits in i
-    for (j--; j >= 0; j--)
-    {
-        // ternary operator, if the condition is true, return 1,
-        // otherwise return 0.
-        k = ((1 << j) & i) ? 1 : 0;
-        printf("%d", k);
-    }
-    printf(" ");
-}
 
 int main(int argc, char *argv[]) {
-    BYTE b;
     
+    union Block B;
+    int i;
+    // Number of bits read
+    uint64_t nobits = 0;
+
+    // File pointer    
     FILE *f;
-    
+
+    // Open file from command line
     f = fopen(argv[1], "r");
 
+    // Number of bytes read
     size_t nobytes;
 
-    // read a byte from a file
-    nobytes = fread(&b, 1, 1, f);
+    // Try to read 64 bytes
+    nobytes = fread(B.bytes, 1, 64, f);
+    printf("Read %ld bytes \n", nobytes);
 
-    while(nobytes) {
-        bin_print(b);
-        nobytes = fread(&b, 1, 1, f);
+    // Update the amount of bits read in.
+    nobits = nobits + (8 * nobytes);
+
+    for (i = 0; i < 16; i++){
+        printf("%08" PFDEC " ", B.words[i]);
+
+        if((i + 1) % 8 == 0)
+            printf("\n");
     }
+    
+    while(!feof(f)) {
+        // Try to read 64 bytes
+        nobytes = fread(B.bytes, 1, 64, f);
+        printf("Read %ld bytes \n", nobytes);
+        nobits = nobits + (8 * nobytes);
 
+        for (i = 0; i < 16; i++){
+            printf("%08" PFDEC " ", B.words[i]);
+
+            if((i + 1) % 8 == 0)
+                printf("\n");
+        }
+    }
+    // Close the file
     fclose(f);
-    printf("\n");
+    // Print the total number of bits
+    printf("Total bits read: %ld\n", nobits);
 
     return 0;
 }
