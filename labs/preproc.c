@@ -8,22 +8,27 @@
 #define BYTE uint16_t
 #define BYTES_TO_READ 128
 
+// SHA works on block of 1024 bits
 union Block {
+    // 8 x 128 = 1024 - deals with blocks as bytes
     BYTE bytes[128];
-    WORD words[32];
-    uint64_t sixf[16];
+    // 64 x 16 = 1024 - deals with blocks as words - 64 bit words
+    WORD words[16];
+    // 128 x 8 = 1024 - deals with the last 128 bits of the final block
+    uint64_t sixf[8];
 };
 
+// Keep track of where we are with the input message/padding
 enum Status {
     READ, PAD, END
 };
 
-// Get the next block
+// Returns 1 if a new block is created from the original message
+// Returns 0 if all of the padded mesage has been consumed
 int next_block(FILE *f, union Block *B, enum Status *S, uint64_t *nobits) {
     
     // Number of bytes read
     size_t nobytes;
-
 
     if (*S == END) {
         return 0;
@@ -34,16 +39,17 @@ int next_block(FILE *f, union Block *B, enum Status *S, uint64_t *nobits) {
         *nobits = *nobits + (16 * nobytes);
         
         // Try to read 128 bytes, if number of bytes read in has less 
-        // than 111 bytes, appending padding to the current block
+        // than 111 bytes, append padding to the current block
         // 128 - 16 - 1 = 111
         // Enough room for padding
         if (nobytes == 128) {
             return 1;
-        } else if (nobytes < 111) {
-            
+        } else if (nobytes < 112) {
+            // Append 1 bit and fifteen 0 bits
             B->bytes[nobytes++] = 0x8000; // Bits: 1000000000000000
             
-            while (nobytes++ < 112) {
+            // Append bits leaving 128 at the end
+            for (nobytes++; nobytes++ < 112; nobytes++) {
                 B->bytes[nobytes] = 0x00;
             }            
             
@@ -55,10 +61,11 @@ int next_block(FILE *f, union Block *B, enum Status *S, uint64_t *nobits) {
         } else {
             // Got to the end of the input message.
             // not enough room in this block for all the padding
-            // Append a 1 bit (and seven 0 bits to make a full byte)
-            B->bytes[nobytes] = 0x8000;
+            // Append a 1 bit and fifteen 0 bits
+            B->bytes[nobytes++] = 0x8000;
             // Append 0 bits
-            while (nobytes++ < BYTES_TO_READ) {
+            for (nobytes++; nobytes++ < BYTES_TO_READ; nobytes++) {
+                // Error: was trying to write to B->nobytes[128]
                 B->bytes[nobytes] = 0x00;
             }
             // Change the status to PAD
@@ -67,15 +74,14 @@ int next_block(FILE *f, union Block *B, enum Status *S, uint64_t *nobits) {
         
     } else if (*S == PAD) {
         nobytes = 0;
-        B->bytes[nobytes] = 0x8000;
         // Append 0 bits
-        while (nobytes++ < BYTES_TO_READ) {
+        for (nobytes = 0; nobytes < 112; nobytes++) {
             B->bytes[nobytes] = 0x00;
         }
-
         // Append nobits as an integer
         B->sixf[15] = *nobits;
-        *S = PAD;
+        // Change the status
+        *S = END;
     }
     
     return 1;
@@ -99,12 +105,12 @@ int main(int argc, char *argv[]) {
     // Open file from command line
     f = fopen(argv[1], "r");
 
-    // loop through the preprocessend blocks
+    // loop through the preprocess end blocks
     while(next_block(f, &B, &S, &nobits)) {
         for (i = 0; i < 32; i++){
-            printf("%08" PFHEX " ", B.words[i]);
+            printf("%016" PFHEX " ", B.words[i]);
         }
-        printf("\n\n");
+        printf("\n");
     }
     // Close the file
     fclose(f);

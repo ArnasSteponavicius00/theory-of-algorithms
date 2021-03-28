@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
 
     rotationOf = i64;
 
-    // Display ddthe rotated bits
+    // Display the rotated bits
     printf("Right rotation of %d by %d: \n", rotationOf, rotateBy);
     rotateRight(rotateBy, rotationOf);
 
