@@ -49,7 +49,7 @@ int next_block(FILE *f, union Block *B, enum Status *S, uint64_t *nobits) {
             B->bytes[nobytes++] = 0x8000; // Bits: 1000000000000000
             
             // Append bits leaving 128 at the end
-            for (nobytes++; nobytes++ < 112; nobytes++) {
+            for (nobytes++; nobytes < 112; nobytes++) {
                 B->bytes[nobytes] = 0x00;
             }            
             
