@@ -1,25 +1,32 @@
 #include <stdio.h>
 #include <inttypes.h>
+#include <byteswap.h>
+
+// Endianess
+// ref: https://developer.ibm.com/technologies/systems/articles/au-endianc/
+const int _i = 1;
+#define islilend() ((*(char*)&_i) != 0)
 
 #define WLEN 32
 #define WORD uint32_t
 #define PFDEC PRIu64
-#define PFHEX PRIX64
+#define PFHEX PRIx32
 #define BYTE uint8_t
 #define BYTES_TO_READ 64
 
 // Page 5 of Secure Hash Standard
-#define ROTL(x, n) (x << n) | (x >> (WLEN - n))
-#define ROTR(x, n) (x >> n) | (x << (WLEN - n))
-#define SHR(x, n) x>>n
+#define ROTL(x,n) ((x << n) | (x >> (WLEN - n)))
+#define ROTR(x,n) ((x >> n) | (x << (WLEN - n)))
+#define SHR(x,n) (x >> n)
 
-// Page 10 of Secure Hash Standard
-#define Ch(x, y, z) ((x & y) ^ (~x & z))
-#define Maj(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
-#define SIG0(x) ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22)
-#define SIG1(x) ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25)
-#define Sig0(x) ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3)
-#define Sig1(x) ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10)
+// Page 10 of the secure hash standard.
+#define Ch(x,_y,_z) ((x & _y) ^ (~x & _z))
+#define Maj(x,_y,_z) ((x & _y) ^ (x & _z) ^ (_y & _z))
+
+#define SIG0(x) (ROTR(x,2)  ^ ROTR(x,13) ^ ROTR(x,22))
+#define SIG1(x) (ROTR(x,6)  ^ ROTR(x,11) ^ ROTR(x,25))
+#define Sig0(x) (ROTR(x,7)  ^ ROTR(x,18) ^ SHR(x,3))
+#define Sig1(x) (ROTR(x,17) ^ ROTR(x,19) ^ SHR(x,10))
 
 // SHA works on block of 512 bits
 union Block {
@@ -57,21 +64,17 @@ int next_block(FILE *f, union Block *M, enum Status *S, uint64_t *nobits) {
 
     if (*S == END) {
         return 0;
-    } if(*S == READ) {
-        // Try to read 128 bytes
+    } else if (*S == READ) {
+        // Try to read 64 bytes
         nobytes = fread(M->bytes, 1, BYTES_TO_READ, f);
         // update the total bits read
         *nobits = *nobits + (8 * nobytes);
-        
-        // Try to read 128 bytes, if number of bytes read in has less 
-        // than 111 bytes, append padding to the current block
-        // 128 - 16 - 1 = 111
-        // Enough room for padding
+
         if (nobytes == 64) {
-            return 1;
+            // Do nothing
         } else if (nobytes < 56) {
             // Append 1 bit and seven 0 bits
-            M->bytes[nobytes++] = 0x80;
+            M->bytes[nobytes] = 0x80;
             
             // Append bits leaving 64 at the end
             for (nobytes++; nobytes < 56; nobytes++) {
@@ -79,7 +82,7 @@ int next_block(FILE *f, union Block *M, enum Status *S, uint64_t *nobits) {
             }            
             
             // Append length of original input (Check Endian)
-            M->sixf[7] = *nobits;
+            M->sixf[7] = (islilend() ? bswap_64(*nobits) : *nobits);
             
             // broadcast this is the last block
             *S = END;
@@ -87,27 +90,29 @@ int next_block(FILE *f, union Block *M, enum Status *S, uint64_t *nobits) {
             // Got to the end of the input message.
             // not enough room in this block for all the padding
             // Append a 1 bit and seven 0 bits
-            M->bytes[nobytes++] = 0x80;
+            M->bytes[nobytes] = 0x80;
             // Append 0 bits
             for (nobytes++; nobytes++ < BYTES_TO_READ; nobytes++) {
-                // Error: was trying to write to B->nobytes[128]
                 M->bytes[nobytes] = 0x00;
             }
             // Change the status to PAD
             *S = PAD;
         }
-        
     } else if (*S == PAD) {
-        nobytes = 0;
         // Append 0 bits
         for (nobytes = 0; nobytes < 56; nobytes++) {
             M->bytes[nobytes] = 0x00;
         }
         // Append nobits as an integer
-        M->sixf[7] = *nobits;
+        M->sixf[7] = (islilend() ? bswap_64(*nobits) : *nobits);
         // Change the status
         *S = END;
     }
+
+    // Swap byte order of the words if machine is little endian
+    if (islilend())
+        for (int i = 0; i < 16; i++)
+            M->words[i] = bswap_32(M->words[i]);
     
     return 1;
 }
@@ -141,7 +146,7 @@ int next_hash(union Block *M, WORD H[]) {
     // Section 6.2.2, pt 3
     for (t = 0; t < 64; t++)
     {
-        T1 = h + SIG1(e) + Ch(e, f, g) + K[t];
+        T1 = h + SIG1(e) + Ch(e, f, g) + K[t] + W[t];
         T2 = SIG0(a) + Maj(a, b, c);
         h = g;
         g = f;
@@ -162,6 +167,8 @@ int next_hash(union Block *M, WORD H[]) {
     H[5] = f + H[5];
     H[6] = g + H[6];
     H[7] = h + H[7];
+
+    return 0;
 }
 
 // The function that performs the sha356 algortihm on the message
@@ -179,9 +186,6 @@ int sha256(FILE *f, WORD H[]) {
         next_hash(&M, H);
     }
 
-    // Print the total number of bits
-    printf("Total bits read: %ld\n", nobits);
-
     return 0;
 }
 
@@ -193,7 +197,7 @@ int main(int argc, char *argv[]) {
 
     // File pointer    
     FILE *f;
-    size_t nobytes;
+
 
     // Open file from command line
     f = fopen(argv[1], "r");
@@ -202,7 +206,7 @@ int main(int argc, char *argv[]) {
     sha256(f, H);
 
     for (int i = 0; i < 8; i++) {
-        printf("%08" PFHEX " ", H[i]);
+        printf("%08" PFHEX, H[i]);
     }
     printf("\n");
 
