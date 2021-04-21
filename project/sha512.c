@@ -202,7 +202,8 @@ int sha512(FILE *f, WORD H[]) {
 
 int main(int argc, char *argv[]) {
 
-    // referenced from: https://www.tutorialspoint.com/cprogramming/c_command_line_arguments.htm
+    // referenced and adapted from: 
+    // https://www.tutorialspoint.com/cprogramming/c_command_line_arguments.htm
     if(argc == 2) {
         // Initial hash values
         WORD H[]=  {  
