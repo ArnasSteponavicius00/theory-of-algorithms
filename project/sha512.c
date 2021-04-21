@@ -201,28 +201,38 @@ int sha512(FILE *f, WORD H[]) {
 }
 
 int main(int argc, char *argv[]) {
-    // Initial hash values
-    WORD H[]=  {  
-        0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1, 0x510e527fade682d1, 0x9b05688c2b3e6c1f, 
-        0x1f83d9abfb41bd6b, 0x5be0cd19137e2179
-    };
 
-    // File pointer    
-    FILE *f;
+    // referenced from: https://www.tutorialspoint.com/cprogramming/c_command_line_arguments.htm
+    if(argc == 2) {
+        // Initial hash values
+        WORD H[]=  {  
+            0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1, 0x510e527fade682d1, 0x9b05688c2b3e6c1f, 
+            0x1f83d9abfb41bd6b, 0x5be0cd19137e2179
+        };
 
-    // Open file from command line
-    f = fopen(argv[1], "r");
+        // File pointer    
+        FILE *f;
 
-    // calculate sha256 of f
-    sha512(f, H);
+        // Open file from command line
+        f = fopen(argv[1], "r");
 
-    for (int i = 0; i < 8; i++) {
-        printf("%016" PFHEX, H[i]);
+        // calculate sha256 of f
+        sha512(f, H);
+
+        for (int i = 0; i < 8; i++) {
+            printf("%016" PFHEX, H[i]);
+        }
+        printf("  %s\n", argv[1]);
+
+        // Close the file
+        fclose(f);
     }
-    printf("\n");
-
-    // Close the file
-    fclose(f);
+    else if (argc > 2){
+        printf("Too many arguments supplied.\n");
+    }
+    else {
+        printf("Atleast one argument is required\n");
+    }
 
     return 0;
 }
