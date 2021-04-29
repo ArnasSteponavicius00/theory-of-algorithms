@@ -38,6 +38,9 @@ Hashes can not be unhashed, it is used in cryptography for this specific reason,
 ## Can you design an algorithm that, given enough time, will find input messages that give each of the possible 512-bit strings?
 Given enough time there are algorithms that would be able to compute all the hashes, however, the amount of hashes that would need to be calculated is 2^512 which is an enormous number and impossible to fathom, our current state of technology would take way too long to find messages that return all possible values. [This blog post](https://bugcharmer.blogspot.com/2012/06/how-big-is-2128.html?m=1) which was also mentioned above, gives good insight as to how large 2^128. Here is a quote from one of the paragraphs: *"If your PC can try 2^40 keys per day, it would take you about 847,904,136,496,835,804,725,427 (848 sextillion) years in the worst case."*. So calculating all the possible 512 bit strings which is 2^512 would not be feasible at all. This [quora user](https://www.quora.com/How-many-SHA-512-hashes-exist?) also gives an estimate and believes that currently less than 100 billion practical use SHA-512 hashes have been computed to this date, comparing to the size of 2^512, 100 billion might aswell be a drop in the ocean.
 
+## How difficult is it to find a hash digest beginning with at least twelve zeros?
+The answer to this question depends on the hardware that is used. Since it the SHA-2 algorithms are one-way functions it is impossible to calculate inputs that would return a hash value with 12 leading zeros, however, it is possible to roughly calculate how long it would take to calculate a hash value with 12 leading zeros based on the hardware. The first step is to get a target hash value (which will have 12 leading zeros in this case). Then you divide by the maximum value of a 512-bit number. This will give you a probability of getting 12 zeros. Get the reciprocal of the value (reciprocal is a pair of numbers i.e. 2/3, 1/1.46E-11), then divide the value by the amount of hashes by the hashrate of the hardware. This will give back the amount of seconds required to solve the problem. [Explation adapted from this answer](https://bitcoin.stackexchange.com/a/81660). Crypto miners use calculations like this to create target hashes when mining for blocks.
+
 ## Author:
 * Arnas Steponavicius
 
@@ -47,4 +50,6 @@ Given enough time there are algorithms that would be able to compute all the has
 * [SHA-512 Input Limit](https://crypto.stackexchange.com/questions/64714/why-is-sha-512-limited-to-an-input-of-2128-bits)
 * [Reversing Hashes, is it possible?](https://www.quora.com/How-is-it-possible-that-hashing-is-impossible-to-reverse-Is-there-a-proof)
 * [How big is 2^128](https://bugcharmer.blogspot.com/2012/06/how-big-is-2128.html?m=1)
-
+* [Creating a hash with 9 zeros SHA-256](https://bitcoin.stackexchange.com/a/81660)
+* [Generation Calculator](https://en.bitcoin.it/wiki/Generation_Calculator)
+* [Target Hash](https://www.investopedia.com/terms/t/target-hash.asp)
